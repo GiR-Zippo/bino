@@ -190,6 +190,7 @@ in_out_widget::in_out_widget(QSettings *settings, QWidget *parent) :
     _output_combobox->addItem(QIcon(":icons-local/output-type-amber-blue.png"), _("Amber/blue glasses, Dubois"));
     _output_combobox->addItem(QIcon(":icons-local/output-type-red-green.png"), _("Red/green glasses, monochrome"));
     _output_combobox->addItem(QIcon(":icons-local/output-type-red-blue.png"), _("Red/blue glasses, monochrome"));
+    _output_combobox->addItem(QIcon(":icons-local/output-type-stereo.png"), _("3DVision 2"));
     connect(_output_combobox, SIGNAL(currentIndexChanged(int)), this, SLOT(output_changed()));
     layout2->addWidget(_output_combobox, 0, 1);
     layout2->setColumnStretch(1, 1);
@@ -353,6 +354,9 @@ void in_out_widget::set_stereo_mode(parameters::stereo_mode_t stereo_mode, bool 
         break;
     case parameters::mode_red_blue_monochrome:
         _output_combobox->setCurrentIndex(25);
+        break;
+    case parameters::mode_3DVision:
+        _output_combobox->setCurrentIndex(26);
         break;
     }
     _swap_checkbox->setChecked(stereo_mode_swap);
@@ -665,6 +669,9 @@ void in_out_widget::get_stereo_mode(parameters::stereo_mode_t &stereo_mode, bool
         break;
     case 25:
         stereo_mode = parameters::mode_red_blue_monochrome;
+        break;
+    case 26:
+        stereo_mode = parameters::mode_3DVision;
         break;
     }
     stereo_mode_swap = _swap_checkbox->isChecked();

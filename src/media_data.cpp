@@ -379,6 +379,9 @@ std::string parameters::stereo_mode_to_string(stereo_mode_t stereo_mode, bool st
     case mode_red_blue_monochrome:
         s = "red-blue-monochrome";
         break;
+    case mode_3DVision:
+        s = "3dvision";
+        break;
     }
     if (stereo_mode_swap) {
         s += "-swap";

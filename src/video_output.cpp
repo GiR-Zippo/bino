@@ -1361,12 +1361,14 @@ void video_output::display_current_frame(
             || _render_params.stereo_mode() == parameters::mode_red_blue_monochrome) {
         draw_quad(x, y, w, h, my_tex_coords);
     } else if ((_render_params.stereo_mode() == parameters::mode_mono_left && !mono_right_instead_of_left)
-            || (_render_params.stereo_mode() == parameters::mode_alternating && display_frameno % 2 == 0)) {
+            || (_render_params.stereo_mode() == parameters::mode_alternating && display_frameno % 2 == 0)
+            || (_render_params.stereo_mode() == parameters::mode_3DVision && display_frameno % 2 == 0)) {
         glUniform1f(glGetUniformLocation(_render_prg, "channel"), 0.0f);
         draw_quad(x, y, w, h, my_tex_coords);
     } else if (_render_params.stereo_mode() == parameters::mode_mono_right
             || (_render_params.stereo_mode() == parameters::mode_mono_left && mono_right_instead_of_left)
-            || (_render_params.stereo_mode() == parameters::mode_alternating && display_frameno % 2 == 1)) {
+            || (_render_params.stereo_mode() == parameters::mode_alternating && display_frameno % 2 == 1)
+            || (_render_params.stereo_mode() == parameters::mode_3DVision && display_frameno % 2 == 1)) {
         glUniform1f(glGetUniformLocation(_render_prg, "channel"), 1.0f);
         draw_quad(x, y, w, h, my_tex_coords);
     } else if (_render_params.stereo_mode() == parameters::mode_left_right
@@ -1391,7 +1393,8 @@ void video_output::display_current_frame(
                 || _render_params.stereo_mode() == parameters::mode_left_right_half
                 || _render_params.stereo_mode() == parameters::mode_top_bottom
                 || _render_params.stereo_mode() == parameters::mode_top_bottom_half
-                || _render_params.stereo_mode() == parameters::mode_alternating)) {
+                || _render_params.stereo_mode() == parameters::mode_alternating
+                || _render_params.stereo_mode() == parameters::mode_3DVision)) {
         /* DLP 3-D Ready Sync: draw colored lines to allow the projector
          * to identify the stereo mode and the left / right views automatically. */
         const uint32_t R = 0xffu << 16u;
@@ -1420,6 +1423,12 @@ void video_output::display_current_frame(
            glWindowPos2i(0, height / 2);
            glDrawPixels(width, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, _3d_ready_sync_buf.ptr());
         } else if (_render_params.stereo_mode() == parameters::mode_alternating) {
+           uint32_t color = (display_frameno % 4 < 2 ? G : R | B);
+           for (int i = 0; i < width; i++)
+               _3d_ready_sync_buf.ptr<uint32_t>()[i] = color;
+           glWindowPos2i(0, 0);
+           glDrawPixels(width, 1, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, _3d_ready_sync_buf.ptr());
+        } else if (_render_params.stereo_mode() == parameters::mode_3DVision) {
            uint32_t color = (display_frameno % 4 < 2 ? G : R | B);
            for (int i = 0; i < width; i++)
                _3d_ready_sync_buf.ptr<uint32_t>()[i] = color;

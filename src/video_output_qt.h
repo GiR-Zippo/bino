@@ -82,6 +82,7 @@ public:
     int64_t time_to_next_frame_presentation();
 
     void run();
+    void Runnable3DVision();
 
     bool failure() const
     {

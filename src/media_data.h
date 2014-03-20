@@ -113,6 +113,7 @@ public:
         mode_amber_blue_dubois,        // Amber/blue anaglyph, high quality Dubois method
         mode_red_green_monochrome,     // Red/green anaglyph, monochrome method
         mode_red_blue_monochrome,      // Red/blue anaglyph, monochrome method
+        mode_3DVision,                 // 3DVision2 usb
     } stereo_mode_t;
 
     // Convert the stereo mode to and from a string representation

@@ -5,7 +5,7 @@
 # permitted in any medium without royalty provided the copyright notice and this
 # notice are preserved. This file is offered as-is, without any warranty.
 
-SUBDIRS = base
+SUBDIRS = base lib
 
 bin_PROGRAMS = bino
 
@@ -122,10 +122,14 @@ CLEANFILES = $(BUILT_SOURCES)
 DEFS += -DHTMLDIR=\"$(htmldir)\" -DLOCALEDIR=\"$(localedir)\"
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/base \
+	-I$(top_srcdir)/src/lib \
 	$(libavformat_CFLAGS) $(libavdevice_CFLAGS) $(libswscale_CFLAGS) $(libass_CFLAGS) \
 	$(libopenal_CFLAGS) $(libgl_CFLAGS) $(libglewmx_CFLAGS) $(libqtopengl_CFLAGS)
 
-bino_LDADD = $(top_builddir)/src/base/libbase.a $(LIBINTL) $(LIBICONV) \
+bino_LDADD = -ldl -lusb-1.0 -lXxf86vm -lglut \
+	$(top_builddir)/src/base/libbase.a \
+	$(top_builddir)/src/lib/libnvstusb.a \
+	$(LIBINTL) $(LIBICONV) \
 	$(libavformat_LIBS) $(libavdevice_LIBS) $(libswscale_LIBS) $(libass_LIBS) \
 	$(libopenal_LIBS) $(libgl_LIBS) $(libglewmx_LIBS) $(libqtopengl_LIBS)
 

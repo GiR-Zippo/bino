@@ -62,10 +62,19 @@
 #include "str.h"
 #include "dbg.h"
 #include "timer.h"
+#include <sys/time.h>
 
 #include "video_output_qt.h"
 #include "lib_versions.h"
 
+#include <X11/Xlib.h>
+#include <X11/extensions/xf86vmode.h>
+extern "C" {
+#include "nvstusb.h"
+}
+
+// context for dealing with the stereo usb IR emitter
+struct nvstusb_context *nv_ctx = NULL;
 
 /* The GL thread */
 
@@ -132,8 +141,126 @@ void gl_thread::redisplay()
     _redisplay = true;
 }
 
+void gl_thread::Runnable3DVision()
+{
+    try {
+        assert(_vo_qt_widget->context()->isValid());
+        _vo_qt_widget->makeCurrent();
+        assert(QGLContext::currentContext() == _vo_qt_widget->context());
+
+        // initialize communications with the usb emitter
+        nv_ctx = nvstusb_init();
+        if (nv_ctx == NULL)
+        {
+            fprintf(stderr, "Could not initialize NVIDIA 3D Vision IR emitter!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        Display *display = XOpenDisplay(0);
+        double display_num = DefaultScreen(display);
+        XF86VidModeModeLine mode_line;
+        int pixel_clk = 0;
+        XF86VidModeGetModeLine(display, display_num, &pixel_clk, &mode_line);
+        double frame_rate = (double) pixel_clk * 1000.0 / mode_line.htotal / mode_line.vtotal;
+        printf("Detected refresh rate of %f Hz.\n", (frame_rate));
+        nvstusb_set_rate(nv_ctx, frame_rate);
+        bool odd = true;
+
+        struct timeval start, end;
+        long useconds;
+        gettimeofday(&start, NULL);
+        GLuint count;
+
+        while (_render)
+        {
+            {
+                _wait_mutex.lock();
+                if (_action_activate)
+                {
+                    try {
+                        _vo_qt->video_output::activate_next_frame();
+                    }
+                    catch (std::exception& e) {
+                        _e = e;
+                        _render = false;
+                        _failure = true;
+                    }
+                    _action_activate = false;
+                    _wait_cond.wake_one();
+                }
+                _wait_mutex.unlock();
+            }
+            if (_failure)
+                break;
+            _wait_mutex.lock();
+            if (_action_prepare) {
+                try {
+                    _vo_qt->video_output::prepare_next_frame(_next_frame, _next_subtitle);
+                }
+                catch (std::exception& e) {
+                    _e = e;
+                    _render = false;
+                    _failure = true;
+                }
+                _action_prepare = false;
+                _wait_cond.wake_one();
+            }
+            _wait_mutex.unlock();
+            if (_failure)
+                break;
+
+            if (_w > 0 && _h > 0
+                    && (_vo_qt->full_display_width() != _w
+                        || _vo_qt->full_display_height() != _h)) {
+                _vo_qt->reshape(_w, _h);
+            }
+
+            {
+                _vo_qt->display_current_frame(odd);
+               // glXGetVideoSyncSGI(&count);
+               // glXWaitVideoSyncSGI(2, (count +1)%2, &count);
+                _vo_qt_widget->swapBuffers();
+                gettimeofday(&end, NULL);
+                useconds = end.tv_usec - start.tv_usec;
+                nvstusb_swap_eye(nv_ctx, (nvstusb_eye) (!odd), useconds);
+                gettimeofday(&start, NULL);
+                odd = !odd;
+            }
+        }
+    }
+    catch (std::exception& e) {
+        _e = e;
+        _render = false;
+        _failure = true;
+    }
+    _wait_mutex.lock();
+    if (_action_activate || _action_prepare)
+    {
+        while (!_action_finished)
+        {
+            _wait_cond.wake_one();
+            _wait_mutex.unlock();
+            _wait_mutex.lock();
+        }
+    }
+    _wait_mutex.unlock();
+    _vo_qt_widget->doneCurrent();
+#if QT_VERSION >= 0x050000
+    _vo_qt_widget->context()->moveToThread(QCoreApplication::instance()->thread());
+#endif
+
+    nvstusb_deinit(nv_ctx);
+}
+
+
 void gl_thread::run()
 {
+    if (parameters::mode_3DVision)
+    {
+        Runnable3DVision();
+        return;
+    }
+        
     try {
         assert(_vo_qt_widget->context()->isValid());
         _vo_qt_widget->makeCurrent();
@@ -589,7 +716,12 @@ video_output_qt::video_output_qt(video_container_widget *container_widget) :
         _container_widget->start_timer();
     }
     _format.setDoubleBuffer(true);
-    _format.setSwapInterval(dispatch::parameters().swap_interval());
+    
+    if(parameters::mode_3DVision)
+        _format.setSwapInterval(0);
+    else
+        _format.setSwapInterval(dispatch::parameters().swap_interval());
+    
     _format.setStereo(false);
     // Save some constant values into member variables
     // so that we don't have to call Qt functions when the GL thread
