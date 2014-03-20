@@ -164,7 +164,7 @@ void gl_thread::Runnable3DVision()
         double frame_rate = (double) pixel_clk * 1000.0 / mode_line.htotal / mode_line.vtotal;
         printf("Detected refresh rate of %f Hz.\n", (frame_rate));
         nvstusb_set_rate(nv_ctx, frame_rate);
-        bool odd = true;
+        bool odd = false;
 
         struct timeval start, end;
         long useconds;
@@ -216,15 +216,22 @@ void gl_thread::Runnable3DVision()
             }
 
             {
-                _vo_qt->display_current_frame(odd);
-               // glXGetVideoSyncSGI(&count);
-               // glXWaitVideoSyncSGI(2, (count +1)%2, &count);
+                _vo_qt->display_current_frame(0);
                 _vo_qt_widget->swapBuffers();
                 gettimeofday(&end, NULL);
                 useconds = end.tv_usec - start.tv_usec;
-                nvstusb_swap_eye(nv_ctx, (nvstusb_eye) (!odd), useconds);
+                nvstusb_swap_eye(nv_ctx, (nvstusb_eye) (0), useconds);
                 gettimeofday(&start, NULL);
-                odd = !odd;
+
+                //glXGetVideoSyncSGI(&count);
+                //glXWaitVideoSyncSGI(2, (count +1)%2, &count);
+
+                _vo_qt->display_current_frame(1);
+                _vo_qt_widget->swapBuffers();
+                gettimeofday(&end, NULL);
+                useconds = end.tv_usec - start.tv_usec;
+                nvstusb_swap_eye(nv_ctx, (nvstusb_eye) (1), useconds);
+                gettimeofday(&start, NULL);
             }
         }
     }
@@ -255,7 +262,7 @@ void gl_thread::Runnable3DVision()
 
 void gl_thread::run()
 {
-    if (parameters::mode_3DVision)
+    if (dispatch::parameters().stereo_mode() == parameters::mode_3DVision)
     {
         Runnable3DVision();
         return;
@@ -717,7 +724,7 @@ video_output_qt::video_output_qt(video_container_widget *container_widget) :
     }
     _format.setDoubleBuffer(true);
     
-    if(parameters::mode_3DVision)
+    if(dispatch::parameters().stereo_mode() == parameters::mode_3DVision)
         _format.setSwapInterval(0);
     else
         _format.setSwapInterval(dispatch::parameters().swap_interval());
@@ -1253,4 +1260,16 @@ void video_output_qt::receive_notification(const notification& note)
     if (note.type == notification::play && !dispatch::playing()) {
         exit_fullscreen();
     }
+
+    if (note.type == notification::stereo_mode
+        && dispatch::playing()
+        && dispatch::parameters().stereo_mode() == parameters::mode_3DVision)
+    {
+        this->send_cmd(command::toggle_play);
+        _format.setSwapInterval(0);
+    }
+
+    if (note.type == notification::stereo_mode
+        && dispatch::parameters().stereo_mode() != parameters::mode_3DVision)
+        _format.setSwapInterval(dispatch::parameters().swap_interval());
 }

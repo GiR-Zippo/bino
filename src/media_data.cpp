@@ -461,6 +461,8 @@ bool parameters::parse_stereo_mode(const std::string& s, stereo_mode_t* stereo_m
         *stereo_mode = mode_red_green_monochrome;
     } else if (s == "red-blue-monochrome") {
         *stereo_mode = mode_red_blue_monochrome;
+    } else if (s == "3dvision") {
+        *stereo_mode = mode_3DVision;
     } else {
         ok = false;
     }

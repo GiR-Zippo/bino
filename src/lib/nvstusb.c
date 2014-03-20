@@ -56,8 +56,8 @@ static void * nvstusb_stereo_thread(void * in_pv_arg);
 #define NVSTUSB_CMD_CALL_X0199  (0xBE)  /* call routine at 0x0199 */
 
 
-//uint32_t TimingTable[][] = {-72000, -9000, -16000 }, 
-//                          [ 0
+uint32_t TimingTable[2][3] = {{6000, 2250, 4000 },
+                              {   0,    0,    0 }};
 
 /* state of the controller */
 struct nvstusb_context {
@@ -149,29 +149,22 @@ nvstusb_set_rate(struct nvstusb_context *ctx, float rate)
 
   /* some timing voodoo */
   int32_t frameTime   = 1000000.0 / rate;      /* 8.33333 ms if 120 Hz */
-  int32_t activeTime  = frameTime;               /* 2.08000 ms time each eye is on*/
-  int32_t w = NVSTUSB_T2_COUNT(frameTime/1.3888);     /* 4.56800 ms */
-  int32_t x = NVSTUSB_T0_COUNT(frameTime/3.7037);     /* 4.77425 ms */
-  int32_t y = NVSTUSB_T0_COUNT(frameTime/2);
+  int32_t w, x, y;
   int32_t z = NVSTUSB_T2_COUNT(frameTime);
 
-  fprintf(stderr, "AT: %d \n",  activeTime);
-  fprintf(stderr, "FT: %d \n",  y);
+  if (rate <= (float)120.0f && rate >= (float)112.0f)
+  {
+      w = NVSTUSB_T2_COUNT(TimingTable[0][0]);
+      x = NVSTUSB_T0_COUNT(TimingTable[0][1]);
+      y = NVSTUSB_T0_COUNT(TimingTable[0][2]);
+  }
+  else
+  {
+    w = NVSTUSB_T2_COUNT(frameTime/1.3888);
+    x = NVSTUSB_T0_COUNT(frameTime/3.7037);
+    y = NVSTUSB_T0_COUNT(frameTime/2);
+  }
   
-  w = -72000;
-  x = -9000;
-  y = -16000;
-  //z = -100001;
-//             -100013     -28137      -2000
-// 01 00 18 00 53 79 FE FF 17 92 FF FF 30 F8 FF FF  ....Sy......0...
-//                         -200027 
-// 24 28 30 22 05 08 0A 04 A5 F2 FC FF              $(0"........      
- 
-//              -72000      -9000       -16000
-//  01 00 18 00 C0 E6 FE FF D8 DC FF FF 80 C1 FF FF  ................
-//                          -100001
-//  22 24 28 30 04 05 08 0A 5F 79 FE FF              "$(0...._y.. 
-
   uint8_t cmdTimings[] = { 
     NVSTUSB_CMD_WRITE,      /* write data */
     0x00,                   /* to address 0x2007 (0x2007+0x00) = ?? */
