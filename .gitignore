@@ -1,0 +1,16 @@
+INSTALL
+Makefile.in
+aclocal.m4
+autom4te.cache/
+build/
+out/
+config.h.in
+configure
+*.swp
+*.o
+*~
+doc/*.info
+doc/version.texi
+doc/stamp-vti
+po/*.pot
+po/*.gmo
