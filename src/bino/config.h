@@ -45,9 +45,6 @@
 /* Have Equalizer? */
 #define HAVE_LIBEQUALIZER 0
 
-/* Have liblircclient? */
-#define HAVE_LIBLIRCCLIENT 0
-
 /* Have NVIDIA libXNVCtrl for Quadro SDI output? */
 #define HAVE_LIBXNVCTRL 0
 
@@ -97,7 +94,7 @@
 #define HAVE_WCSWIDTH 1
 
 /* Whether we are running on X11 */
-#define HAVE_X11 1
+// #define HAVE_X11 1
 #define GLEW_MX 1
 
 /* Define as const if the declaration of iconv() needs const. */

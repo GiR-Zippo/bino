@@ -56,6 +56,7 @@ static void * nvstusb_stereo_thread(void * in_pv_arg);
 #define NVSTUSB_CMD_CALL_X0199  (0xBE)  /* call routine at 0x0199 */
 
 
+//fps
 uint32_t TimingTable[3][3] = {{6000, 4300, 2000 },
                               {6000, 2250, 4000 },
                               {   0,    0,    0 }};
@@ -156,7 +157,7 @@ nvstusb_set_rate(struct nvstusb_context *ctx, float rate)
   if (rate <= (float)120.0f && rate >= (float)112.0f)
   {
       fprintf(stderr, "Using TimingTable\n");
-      w = NVSTUSB_T2_COUNT(TimingTable[0][0]);
+      w = NVSTUSB_T2_COUNT(rate);
       x = NVSTUSB_T0_COUNT(TimingTable[0][1]);
       y = NVSTUSB_T0_COUNT(TimingTable[0][2]);
   }

@@ -3,8 +3,6 @@ set (MOC_HEADERS_GUI ${CMAKE_CURRENT_SOURCE_DIR}/gui.h )
 set (MOC_HEADERS_VIDEO ${CMAKE_CURRENT_SOURCE_DIR}/video_output_qt.h )
 qt4_wrap_cpp (MOC_OUT_GUI ${MOC_HEADERS_GUI})
 qt4_wrap_cpp (MOC_OUT_VIDEO ${MOC_HEADERS_VIDEO})
-# QT4_AUTOMOC( ${CMAKE_CURRENT_SOURCE_DIR}/gui.moc
-#              ${CMAKE_CURRENT_SOURCE_DIR}/video_output_qt.moc)
 
 file(GLOB_RECURSE sources_Base base/*.cpp base/*.h)
 file(GLOB sources_localdir *.cpp *.h)

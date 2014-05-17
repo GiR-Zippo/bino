@@ -42,6 +42,18 @@ find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 
 
+message( STATUS "Running on X11...")
+find_package(X11)
+if(X11_FOUND)
+    add_definitions(-DHAVE_X11)
+endif(X11_FOUND)
+
+message( STATUS "Looking for LIRC-Client...")
+find_package(LIRCClient)
+if (LIRCCLIENT_FOUND)
+    add_definitions(-DHAVE_LIBLIRCCLIENT)
+endif(LIRCCLIENT_FOUND)
+
 FIND_PACKAGE(Qt4 REQUIRED)
 SET(QT_USE_QTXML 1)
 
