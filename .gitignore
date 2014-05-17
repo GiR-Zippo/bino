@@ -5,6 +5,7 @@ autom4te.cache/
 build/
 out/
 .kdev4/
+build-aux/
 config.h.in
 configure
 *.swp
